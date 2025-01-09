@@ -9,6 +9,8 @@ import PropTypes from "prop-types";
 import HomePage from './pages/HomePage';
 import SignInPage from './pages/SignInPage';
 import SignUpPage from './pages/SignUpPage';
+import EnergyDashboard from "./components/blockchain-ui";
+
 
 function PrivateRoute({ children }) {
   return <SignedIn>{children}</SignedIn>;
@@ -72,6 +74,10 @@ function App() {
             </PrivateRoute>
           }
         />
+          <Route
+          path="/bc"
+          element={<EnergyDashboard />} /> 
+
       </Routes>
     </BrowserRouter>
   );
