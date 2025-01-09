@@ -40,3 +40,45 @@
 .read-the-docs {
   color: #888;
 }
+
+/* ======= clerk overrides ======== */
+.cl-socialButtonsIconButton {
+  border: 2px solid #222429;
+  background-color: #222429;
+}
+.cl-socialButtonsIconButton:hover {
+  background-color: rgba(34, 36, 41, 0.2);
+  border: 2px solid #00BCD4;
+}
+.cl-button {
+  color: white;
+}
+.cl-socialButtonsProviderIcon__github {
+  filter: invert(1);
+}
+.cl-internal-b3fm6y {
+  background: #f97535;
+}
+.cl-formButtonPrimary {
+  background: #00BCD4;
+}
+.cl-footerActionLink {
+  color: #00BCD4;
+}
+.cl-headerSubtitle {
+  color: #c5d0e6;
+}
+.cl-logoImage {
+  width: 10rem;
+  height: 3rem;
+}
+.cl-internal-4a7e9l {
+  color: white;
+}
+
+.cl-userButtonPopoverActionButtonIcon {
+  color: white;
+}
+.cl-internal-wkkub3 {
+  color: #f97535;
+}
