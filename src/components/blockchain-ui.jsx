@@ -1,81 +1,254 @@
-import { useState } from 'react';
-import { getContract } from '../config';
+import React, {useState, useEffect } from 'react';
+import { ethers } from 'ethers';
 
-export default function AddPlant() {
-  const [plantData, setPlantData] = useState({
-    name: '',
-    type: '',
-    energy: '',
-    carbon: ''
+const PowerPlantViewer = () => {
+  const [form, setForm] = useState({
+    plantName: '',
+    plantType: '',
+    carbonEmission: '',
+    carbonCredits: '',
   });
-  const [loading, setLoading] = useState(false);
-const [error, setError] = useState('');
-const [success, setSuccess] = useState('');
 
-const handleSubmit = async (e) => {
-  e.preventDefault();
-  setLoading(true);
-  setError('');
-  setSuccess('');
+  const contractABI = [
+    {
+      "inputs": [
+        {
+          "internalType": "string",
+          "name": "_plantName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "_plantType",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_carbonEmission",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "_carbonCredits",
+          "type": "uint256"
+        }
+      ],
+      "name": "addPlant",
+      "outputs": [],
+      "stateMutability": "nonpayable",
+      "type": "function"
+    },
+    {
+      "anonymous": false,
+      "inputs": [
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "plantName",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "string",
+          "name": "plantType",
+          "type": "string"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "carbonEmission",
+          "type": "uint256"
+        },
+        {
+          "indexed": false,
+          "internalType": "uint256",
+          "name": "carbonCredits",
+          "type": "uint256"
+        }
+      ],
+      "name": "PlantAdded",
+      "type": "event"
+    },
+    {
+      "inputs": [],
+      "name": "getTotalPlants",
+      "outputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [
+        {
+          "internalType": "uint256",
+          "name": "",
+          "type": "uint256"
+        }
+      ],
+      "name": "plants",
+      "outputs": [
+        {
+          "internalType": "string",
+          "name": "plantName",
+          "type": "string"
+        },
+        {
+          "internalType": "string",
+          "name": "plantType",
+          "type": "string"
+        },
+        {
+          "internalType": "uint256",
+          "name": "carbonEmission",
+          "type": "uint256"
+        },
+        {
+          "internalType": "uint256",
+          "name": "carbonCredits",
+          "type": "uint256"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    },
+    {
+      "inputs": [],
+      "name": "viewAllPlants",
+      "outputs": [
+        {
+          "components": [
+            {
+              "internalType": "string",
+              "name": "plantName",
+              "type": "string"
+            },
+            {
+              "internalType": "string",
+              "name": "plantType",
+              "type": "string"
+            },
+            {
+              "internalType": "uint256",
+              "name": "carbonEmission",
+              "type": "uint256"
+            },
+            {
+              "internalType": "uint256",
+              "name": "carbonCredits",
+              "type": "uint256"
+            }
+          ],
+          "internalType": "struct PowerPlantRegistry.PowerPlant[]",
+          "name": "",
+          "type": "tuple[]"
+        }
+      ],
+      "stateMutability": "view",
+      "type": "function"
+    }
+  ];
+  const contractAddress = "0xecd281580ff9fc34bf1836c0ff889c97d1281a39";
 
-  // Validate inputs
-  if (!plantData.energy || !plantData.carbon) {
-    setError('Energy and carbon values are required');
-    setLoading(false);
-    return;
-  }
+  const viewPlants = async () => {
+    try {
+      if (window.ethereum) {
+        console.log(window.ethereum);
+        const provider = new ethers.BrowserProvider(window.ethereum)
+        const contract = new ethers.Contract(contractAddress, contractABI, provider);
+        const allPlants = await contract.viewAllPlants();
+        console.log("All Plants:", allPlants);
+      } else {
+        console.log("Please install MetaMask!");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+    }
+  };
 
-  // Convert to valid numbers
-  const energyValue = Number(plantData.energy);
-  const carbonValue = Number(plantData.carbon);
+  const addPlant = async () => {
+    try {
+      if (window.ethereum) {
+        const provider = new ethers.BrowserProvider(window.ethereum);
+        const signer = await provider.getSigner();
+        const contract = new ethers.Contract(contractAddress, contractABI, signer);
 
-  if (isNaN(energyValue) || isNaN(carbonValue)) {
-    setError('Energy and carbon must be valid numbers');
-    setLoading(false);
-    return;
-  }
+        // Convert the string numbers to BigInt
+        const carbonEmissionBigInt = BigInt(form.carbonEmission);
+        const carbonCreditsBigInt = BigInt(form.carbonCredits);
 
-  try {
-    console.log('Fetching contract...');
-    const contract = await getContract();
+        const tx = await contract.addPlant(
+          form.plantName,
+          form.plantType,
+          carbonEmissionBigInt,
+          carbonCreditsBigInt
+        );
+        await tx.wait(); // Wait for transaction confirmation
+        alert("Plant added successfully!");
+      } else {
+        alert("Please install MetaMask!");
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      alert("Error adding plant: " + error.message);
+    }
+  };
   
-    console.log('Registering plant...');
-    const tx1 = await contract.registerPlant(plantData.name, plantData.type);
-    await tx1.wait();
-  
-    console.log('Recording generation...');
-    const tx2 = await contract.recordGeneration(energyValue, carbonValue);
-    await tx2.wait();
-  
-    setSuccess('Plant registered successfully!');
-  } catch (err) {
-    console.error('Error during transaction:', err);
-    setError(err.message || 'Transaction failed');
-  }
-  
-};
+  const handleChange = (e) => {
+    setForm({ ...form, [e.target.name]: e.target.value });
+  };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input
-        placeholder="Plant Name"
-        onChange={e => setPlantData({...plantData, name: e.target.value})}
-      />
-      <input
-        placeholder="Plant Type"
-        onChange={e => setPlantData({...plantData, type: e.target.value})}
-      />
-      <input
-        type="number"
-        placeholder="Energy (kWh)"
-        onChange={e => setPlantData({...plantData, energy: e.target.value})}
-      />
-      <input
-        type="number"
-        placeholder="Carbon Emission (kg)"
-        onChange={e => setPlantData({...plantData, carbon: e.target.value})}
-      />
-      <button type="submit">Add Plant</button>
-    </form>
+    <div>
+      <button onClick={viewPlants} style={{ padding: '10px', margin: '10px' }}>
+        View All Plants
+      </button>
+      <div>
+      <h2>Add Power Plant</h2>
+      <form onSubmit={(e) => e.preventDefault()}>
+        <input
+          type="text"
+          name="plantName"
+          placeholder="Plant Name"
+          value={form.plantName}
+          onChange={handleChange}
+          style={{ margin: '10px', padding: '5px' }}
+        />
+        <input
+          type="text"
+          name="plantType"
+          placeholder="Plant Type"
+          value={form.plantType}
+          onChange={handleChange}
+          style={{ margin: '10px', padding: '5px' }}
+        />
+        <input
+          type="number"
+          name="carbonEmission"
+          placeholder="Carbon Emission (tons)"
+          value={form.carbonEmission}
+          onChange={handleChange}
+          style={{ margin: '10px', padding: '5px' }}
+        />
+        <input
+          type="number"
+          name="carbonCredits"
+          placeholder="Carbon Credits"
+          value={form.carbonCredits}
+          onChange={handleChange}
+          style={{ margin: '10px', padding: '5px' }}
+        />
+        <button onClick={addPlant} style={{ padding: '10px', margin: '10px' }}>
+          Add Plant
+        </button>
+      </form>
+    </div>
+    </div>
   );
-}
+};
+
+export default PowerPlantViewer;
